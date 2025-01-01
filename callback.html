@@ -10,29 +10,28 @@
 
 <body>
 	<p>Processing authentication...</p>
-	<script type="module">
-		import config from './config.js';
-
-		async function handleCallback() {
-			const urlParams=new URLSearchParams(window.location.search);
-			const code=urlParams.get("code");
+	<script src="env-config.js"></script>
+	<script>
+		function handleCallback() {
+			var urlParams=new URLSearchParams(window.location.search);
+			var code=urlParams.get("code");
 
 			if(code) {
-				try {
-					const response=await fetch(`${config.API_URL}/auth/spotify/callback?code=${code}`);
-					const result=await response.json();
-
-					if(result.status==='success'&&result.data.access_token) {
-						localStorage.setItem('access_token',result.data.access_token);
-						window.location.href='/'; // Redirect to root
-					} else {
-						console.error("Authentication failed:",result.message);
-						window.location.href='/?error=auth_failed';
-					}
-				} catch(error) {
-					console.error("Error during authentication:",error);
-					window.location.href='/?error=auth_error';
-				}
+				fetch(window.ENV.API_URL+'/auth/spotify/callback?code='+code)
+					.then(function(response) {return response.json();})
+					.then(function(result) {
+						if(result.status==='success'&&result.data.access_token) {
+							localStorage.setItem('access_token',result.data.access_token);
+							window.location.href='/';
+						} else {
+							console.error("Authentication failed:",result.message);
+							window.location.href='/?error=auth_failed';
+						}
+					})
+					.catch(function(error) {
+						console.error("Error during authentication:",error);
+						window.location.href='/?error=auth_error';
+					});
 			} else {
 				window.location.href='/?error=no_code';
 			}
